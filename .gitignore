@@ -1,0 +1,6 @@
+/result
+/result-*
+target/
+.direnv/
+*.wasm
+.jj/working_copy/

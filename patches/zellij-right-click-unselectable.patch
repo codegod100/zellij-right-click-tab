@@ -1,0 +1,56 @@
+--- a/zellij-server/src/tab/mouse_handler.rs
++++ b/zellij-server/src/tab/mouse_handler.rs
+@@ -169,6 +169,11 @@
+     FrameIntercepted {
+         pane_id: PaneId,
+     },
++    /// Right-click on a non-focused pane (e.g. unselectable tab-bar plugin).
++    PluginRightClick {
++        pane_id: PaneId,
++        position: Position,
++    },
+     NoAction,
+ }
+ 
+@@ -794,10 +799,26 @@
+                 tab.set_force_render();
+                 Ok(MouseEffect::state_changed())
+             },
++            MouseAction::PluginRightClick { pane_id, position } => {
++                Self::execute_plugin_right_click(tab, pane_id, position, client_id)
++            },
+             MouseAction::NoAction => Ok(MouseEffect::default()),
+         }
+     }
+ 
++    fn execute_plugin_right_click(
++        tab: &mut Tab,
++        pane_id: PaneId,
++        position: Position,
++        client_id: ClientId,
++    ) -> Result<MouseEffect> {
++        if let Some(pane) = tab.get_pane_with_id_mut(pane_id) {
++            let relative_position = pane.relative_position(&position);
++            pane.handle_right_click(&relative_position, client_id);
++        }
++        Ok(MouseEffect::state_changed())
++    }
++
+     fn execute_stop_resize(
+         tab: &mut Tab,
+         position: Position,
+@@ -1379,6 +1400,14 @@
+                     event: *event,
+                 });
+             }
++            // Tab bar / status bar are unselectable so never active; still deliver
++            // right-clicks so plugins can e.g. close a tab.
++            if event.event_type == MouseEventType::Press {
++                return Ok(MouseAction::PluginRightClick {
++                    pane_id,
++                    position: event.position,
++                });
++            }
+             return Ok(MouseAction::NoAction);
+         }
+ 

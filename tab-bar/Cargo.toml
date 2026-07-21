@@ -1,0 +1,16 @@
+[package]
+name = "tab-bar-right-close"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[dependencies]
+colored = "2"
+ansi_term = "0.12"
+unicode-width = "0.1.8"
+zellij-tile = "0.44.3"
+zellij-tile-utils = "0.44.3"
+
+[profile.release]
+lto = true
+opt-level = "s"
