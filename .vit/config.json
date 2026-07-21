@@ -1,3 +1,4 @@
 {
-  "beacon": "vit:github.com/codegod100/zellij-right-click-tab"
+  "beacon": "vit:github.com/zellij-org/zellij",
+  "secondaryBeacon": "vit:github.com/codegod100/zellij-right-click-tab"
 }
