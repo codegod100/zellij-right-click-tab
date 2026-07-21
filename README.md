@@ -36,55 +36,57 @@ nix build github:YOU/zellij-right-click-tab#zellij
 nix build github:YOU/zellij-right-click-tab#tab-bar-right-close
 ```
 
-## Quick install (profile)
+## Quick start
 
 ```bash
-# Patched binary + plugin wasm in the store
-nix profile install github:YOU/zellij-right-click-tab
-# or, from a local clone:
-nix profile install .
+# One-shot: patched binary + flake config (tab-bar plugin wired in)
+nix run github:codegod100/zellij-right-click-tab
+
+# Or from a local clone
+nix run .
 ```
 
-Point your tab-bar alias at the wasm (path from the installed package):
+The default app/package wraps `zellij` with `--config` pointing at a store
+`config.kdl` that only sets:
 
 ```kdl
-// ~/.config/zellij/config.kdl
 plugins {
-    tab-bar location="file:/nix/store/...-zellij-tab-bar-right-close/share/zellij/plugins/tab-bar-right-close.wasm"
+    tab-bar location="file:/nix/store/…/tab-bar-right-close.wasm"
 }
 ```
 
-Easier: install only the packages and use a fixed path under your config:
+Other settings stay at Zellij defaults. To use your own config instead, set
+`ZELLIJ_CONFIG_FILE` / `ZELLIJ_CONFIG_DIR` or pass `-c` / `--config` (the
+wrapper will not override those).
+
+### Install into profile
 
 ```bash
-nix build .#tab-bar-right-close
-cp result/share/zellij/plugins/tab-bar-right-close.wasm ~/.config/zellij/plugins/
-nix profile install .#zellij   # replaces stock zellij if present
+nix profile install github:codegod100/zellij-right-click-tab
+# then:
+zellij   # uses wrapped binary + flake config
 ```
+
+### Custom ~/.config/zellij/config.kdl
+
+Merge the plugins alias yourself (path from `nix build .#tab-bar-right-close`):
 
 ```kdl
 plugins {
-    tab-bar location="file:/home/YOU/.config/zellij/plugins/tab-bar-right-close.wasm"
+    tab-bar location="file:/nix/store/…/share/zellij/plugins/tab-bar-right-close.wasm"
 }
 ```
 
 **Fully quit Zellij** after changing the binary or the `tab-bar` alias (session resurrection may still embed `zellij:tab-bar` until you start a fresh session or rewrite the saved layout).
 
-Grant plugin permissions once if prompted (`ReadApplicationState`, `ChangeApplicationState`), or pre-grant in `~/.cache/zellij/permissions.kdl`:
-
-```kdl
-"/home/YOU/.config/zellij/plugins/tab-bar-right-close.wasm" {
-    ChangeApplicationState
-    ReadApplicationState
-}
-```
-
 ## Packages
 
 | Attribute | What |
 |-----------|------|
-| `default` / `with-plugin` | Patched `zellij` + wasm + `share/zellij/config-snippet.kdl` |
-| `zellij` | Patched wrapper (like nixpkgs `zellij`) |
+| `default` / `with-plugin` | Wrapped `zellij` + wasm + store `config.kdl` |
+| `zellij` | Same wrapper (for `nix run .#zellij`) |
+| `zellij-bin` | Patched binary only (no config wrapper) |
+| `config` | The generated `config.kdl` derivation |
 | `zellij-unwrapped` | Patched unwrapped binary |
 | `tab-bar-right-close` | Plugin package (`share/zellij/plugins/*.wasm`) |
 
