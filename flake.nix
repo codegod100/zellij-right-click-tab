@@ -17,7 +17,8 @@
       rust-overlay,
       flake-utils,
     }:
-    flake-utils.lib.eachDefaultSystem (
+    # eachDefaultSystem includes x86_64-darwin; nixpkgs-unstable dropped it (26.11+).
+    flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" ] (
       system:
       let
         pkgs = import nixpkgs {
