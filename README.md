@@ -12,6 +12,30 @@ Upstream Zellij never delivers right-clicks to the tab bar (it is unselectable, 
 - Zellij **0.44.x** (patch is against nixpkgs `zellij-unwrapped` 0.44.3).
 - Mouse mode enabled (default).
 
+
+## CI / FlakeHub Cache
+
+GitHub Actions (`.github/workflows/flakehub-ci.yml`) runs **Determinate CI**:
+
+- Installs Determinate Nix
+- Authenticates to **FlakeHub Cache** via OIDC (no static secrets)
+- Builds flake packages / checks for discovered systems
+
+Push to `main` / open a PR / run **workflow_dispatch** to populate the cache.
+
+**Notes:**
+
+- Real cache **push** needs a [FlakeHub](https://flakehub.com/signup) plan with Cache; without it builds can still succeed but push may log HTTP 401.
+- Fork PRs do not get FlakeHub Cache auth.
+- Local pulls: `determinate-nixd login` (or your usual Determinate Nix setup).
+
+After CI has built once:
+
+```bash
+nix build github:YOU/zellij-right-click-tab#zellij
+nix build github:YOU/zellij-right-click-tab#tab-bar-right-close
+```
+
 ## Quick install (profile)
 
 ```bash
