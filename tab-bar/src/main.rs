@@ -4,6 +4,7 @@ mod tab;
 use std::cmp::{max, min};
 use std::collections::BTreeMap;
 use std::convert::TryInto;
+use std::time::Instant;
 
 use tab::{get_clicked_line_part, get_tab_to_focus};
 use zellij_tile::prelude::*;
@@ -33,6 +34,8 @@ struct State {
     tab_line: Vec<LinePart>,
     hide_swap_layout_indication: bool,
     cached_keybinds: KeybindsVec,
+    /// Last left-click on empty tab-bar space (column, time) for double-click → new tab.
+    last_empty_click: Option<(usize, Instant)>,
 }
 
 static ARROW_SEPARATOR: &str = "";
@@ -97,14 +100,39 @@ impl ZellijPlugin for State {
             },
             Event::Mouse(me) => match me {
                 Mouse::LeftClick(_, col) => {
-                    let tab_to_focus = get_tab_to_focus(&self.tab_line, self.active_tab_idx, col);
-                    if let Some(idx) = tab_to_focus {
-                        switch_tab_to(idx.try_into().unwrap());
+                    // True tab ribbon segments have a tab_index. Empty gutter / padding /
+                    // session name do not — double-click there opens a new tab (browser-style).
+                    let on_tab = get_clicked_line_part(&self.tab_line, col)
+                        .and_then(|p| p.tab_index)
+                        .is_some();
+                    if !on_tab {
+                        let now = Instant::now();
+                        let is_double = self
+                            .last_empty_click
+                            .map(|(prev_col, t)| {
+                                prev_col.abs_diff(col) <= 1
+                                    && now.duration_since(t).as_millis() <= 400
+                            })
+                            .unwrap_or(false);
+                        if is_double {
+                            self.last_empty_click = None;
+                            new_tab::<&str>(None, None);
+                        } else {
+                            self.last_empty_click = Some((col, now));
+                        }
+                    } else {
+                        self.last_empty_click = None;
+                        let tab_to_focus =
+                            get_tab_to_focus(&self.tab_line, self.active_tab_idx, col);
+                        if let Some(idx) = tab_to_focus {
+                            switch_tab_to(idx.try_into().unwrap());
+                        }
                     }
                 },
                 Mouse::RightClick(_, col) => {
                     // Close the tab under the cursor (including the active tab).
                     // tab_index is 0-based; close_tab_with_index expects that.
+                    self.last_empty_click = None;
                     if let Some(part) = get_clicked_line_part(&self.tab_line, col) {
                         if let Some(idx) = part.tab_index {
                             close_tab_with_index(idx);

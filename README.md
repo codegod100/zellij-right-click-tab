@@ -1,6 +1,6 @@
 # zellij-right-click-tab
 
-Right-click a Zellij tab to close it.
+Right-click a Zellij tab to close it. Double-click empty tab-bar space to open a new tab.
 
 Upstream Zellij never delivers right-clicks to the tab bar (it is unselectable, so mouse routing stops at “not the active pane”). This flake provides:
 
