@@ -147,6 +147,11 @@ impl ZellijPlugin for State {
                 },
                 _ => {},
             },
+            // Granted via ~/.cache/zellij/permissions.kdl (wrapper / HM); no UI possible on
+            // an unselectable 1-row bar. Still handle the event so it is not logged as unknown.
+            Event::PermissionRequestResult(_) => {
+                set_selectable(false);
+            },
             _ => {
                 eprintln!("Got unrecognized event: {:?}", event);
             },

@@ -79,6 +79,23 @@ plugins {
 
 **Fully quit Zellij** after changing the binary or the `tab-bar` alias (session resurrection may still embed `zellij:tab-bar` until you start a fresh session or rewrite the saved layout).
 
+### Permissions (Allow? y/n with no way to accept)
+
+Custom `file:` plugins must be granted `ReadApplicationState` and `ChangeApplicationState`. Zellij draws that prompt **inside the plugin pane**. The tab bar is only one row high and unselectable, so you cannot focus it to press `y`.
+
+The wrapped `zellij` binary (and the home-manager module) pre-write:
+
+`~/.cache/zellij/permissions.kdl`
+
+```kdl
+"/absolute/path/to/tab-bar-right-close.wasm" {
+    ReadApplicationState
+    ChangeApplicationState
+}
+```
+
+If you wire the wasm into your own config without the wrapper, add that block yourself (path must match the exact filesystem path Zellij loads — no `file:` prefix). Then fully quit and start a new session.
+
 ## Packages
 
 | Attribute | What |
